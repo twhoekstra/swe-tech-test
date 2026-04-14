@@ -5,6 +5,7 @@ description = "swe tech test"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "ipykernel>=7.2.0",
     "numpy>=2.4.4",
     "zarr>=3.1.6",
 ]
