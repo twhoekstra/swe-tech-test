@@ -202,8 +202,8 @@ What is the priority of voltage view
 | SA2 | Technical errors are logged for administrators                                            | Medium   |
 | SA3 | Company-wide SSO is sufficient for authentication                                         | High     |
 | SA4 | No GDPR or other compliance requirements, as the tool is for experimental use only        | N/a      |
-| SA5 | The tool should be built with a modular architecture to allow for future updates.         | N/a      |
-| SA6 | The tools implementation shall leverage the cloud provider’s infrastructure for scaling   | N/a      |
+| SA5 | The tool should be built with a modular architecture to allow for future updates.         | Medium   |
+| SA6 | The tools implementation shall leverage the cloud provider’s infrastructure for scaling   | Medium   |
 
 ---
 
