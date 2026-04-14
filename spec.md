@@ -118,17 +118,17 @@ to support working from various locations.
 | ID  | Requirement                                        | Priority |
 |-----|----------------------------------------------------|----------|
 | IR1 | Users shall use the tool through a browser         | High     |
-| IR5 | Users shall interact via mouse/trackpad            | High     |
-| IR6 | Users shall interact via keyboard shorcuts         | Medium   |
-| IR7 | Users must authenticate via company SSO before use | Medium   |
-| IR8 | The tool shall have tooltips for first-time users  | Low      |
+| IR2 | Users shall interact via mouse/trackpad            | High     |
+| IR3 | Users shall interact via keyboard shorcuts         | Medium   |
+| IR4 | Users must authenticate via company SSO before use | Medium   |
+| IR5 | The tool shall have tooltips for first-time users  | Low      |
 
 
 #### 3.1.2 Software interfaces
 
 | ID  | Requirement                                                                      | Priority |
 |-----|----------------------------------------------------------------------------------|----------|
-| IR1 | The tool shall require the data files to be uploaded to a specified location[^1] | High     |
+| IR6 | The tool shall require the data files to be uploaded to a specified location[^1] | High     |
 
 
 [^1]: See scope.
@@ -141,26 +141,26 @@ to support working from various locations.
 
 
 | ID  | Requirement                                                                                                          | Priority |
-| --- |----------------------------------------------------------------------------------------------------------------------|----------|
+|-----|----------------------------------------------------------------------------------------------------------------------|----------|
 | FR1 | The tool shall give a users an overview of the full recording                                                        | High     |
-| FR1 | The tool shall allow users to select a subset of the data in time or in channels                                     | High     |
-| FR1 | The tool shall allow users to view the subset (in time, current/voltage, and channels) in a high-resolution viewport | High     |
-| FR1 | Inside the viewport, a user can navigate to adjacent data (i.e. in time) by panning and zooming                      | High     |
+| FR2 | The tool shall allow users to select a subset of the data in time or in channels                                     | High     |
+| FR3 | The tool shall allow users to view the subset (in time, current/voltage, and channels) in a high-resolution viewport | High     |
+| FR4 | Inside the viewport, a user can navigate to adjacent data (i.e. in time) by panning and zooming                      | High     |
 
 
 #### 3.2.2 User interaction requirements
 
 | ID  | Requirement                                                                                                           | Priority |
-| --- |-----------------------------------------------------------------------------------------------------------------------|----------|
-| IR3 | A user can select ROIs within the data, are bookmarked                                                                | Medium   |
-| IR3 | ROIs should persist between sessions                                                                                  | Medium   |
-| IR3 | ROIs are displayed in a list                                                                                          | Medium   |
-| IR4 | A user shall be able to navigate between RIOs by clicking on them in a list                                           | Medium   |
-| FR3 | Users must be able to mark, name, tag, and categorize ROIs on traces                                                  | Medium   |
-| FR3 | Users must be able to mark, name, tag, and categorize ROIs on traces                                                  | Medium   |
-| FR5 | Users must be able to measure voltage/current via hover-over tooltips and calculate the duration of selected regions. | Low      |
-| FR7 | The UI must include tooltips for first-time users (nice-to-have).                                                     | Low      |
-| FR7 | User errors are handled through user-friendly error messages                                                          | High     |
+|-----|-----------------------------------------------------------------------------------------------------------------------|----------|
+| FR1 | A user can select ROIs within the data, are bookmarked                                                                | Medium   |
+| FR2 | ROIs should persist between sessions                                                                                  | Medium   |
+| FR3 | ROIs are displayed in a list                                                                                          | Medium   |
+| FR4 | A user shall be able to navigate between RIOs by clicking on them in a list                                           | Medium   |
+| FR5 | Users must be able to mark, name, tag, and categorize ROIs on traces                                                  | Medium   |
+| FR6 | Users must be able to mark, name, tag, and categorize ROIs on traces                                                  | Medium   |
+| FR7 | Users must be able to measure voltage/current via hover-over tooltips and calculate the duration of selected regions. | Low      |
+| FR8 | The UI must include tooltips for first-time users (nice-to-have).                                                     | Low      |
+| FR9 | User errors are handled through user-friendly error messages                                                          | High     |
 
 
 | FR1 | The UI must never show a blank screen during pan/zoom operations. Pre-fetching of data is required.                   | High     |
@@ -177,10 +177,10 @@ What is the priority of voltage view
 
 
 | ID  | Requirement                                                                                        | Priority  |
-| --- |----------------------------------------------------------------------------------------------------|-----------|
+|-----|----------------------------------------------------------------------------------------------------|-----------|
 | PR1 | Latency for pan/zoom in the viewport must be <100 ms to ensure real-time interaction.              | High      |
 | PR2 | The tool must handle large datasets of at least 1GB per recording without performance degradation. | High      |
-| PR2 | Performance shall be mostly independent of the hardware avaiable to the user                       | High      |
+| PR3 | Performance shall be mostly independent of the hardware avaiable to the user                       | High      |
 | PR4 | The system must auto-scale to handle concurrent users.                                             | High      |
 
 ---
@@ -188,72 +188,25 @@ What is the priority of voltage view
 ### 3.3 Design constraints
 
 | ID  | Requirement                                                              | Priority  |
-| --- |--------------------------------------------------------------------------|-----------|
-| PR1 | The application needs to run on AWS, GCP, or Azure,                      | High      |
-| PR1 | Raw data files are stored in blob storage  (AWS S3, Azure Blob Storage). | High      |
+|-----|--------------------------------------------------------------------------|-----------|
+| DC1 | The application needs to run on AWS, GCP, or Azure,                      | High      |
+| DC2 | Raw data files are stored in blob storage  (AWS S3, Azure Blob Storage). | High      |
 
 ---
 
 ### 3.4 Software system attributes
 
 | ID  | Requirement                                                                               | Priority |
-| --- |-------------------------------------------------------------------------------------------|----------|
-| PR1 | Occasional downtime (up to 1/2 day per month) is acceptable.                              | Low      |
-| PR1 | Technical errors are logged for administrators                                            | Medium   |
-| PR1 | Company-wide SSO is sufficient for authentication                                         | High     |
-| PR1 | No GDPR or other compliance requirements, as the tool is for experimental use only        | N/a      |
-| PR1 | The tool should be built with a modular architecture to allow for future updates.         | N/a      |
-| PR1 | The tools implementation shall leverage the cloud provider’s infrastructure for scaling   | N/a      |
+|-----|-------------------------------------------------------------------------------------------|----------|
+| SA1 | Occasional downtime (up to 1/2 day per month) is acceptable.                              | Low      |
+| SA2 | Technical errors are logged for administrators                                            | Medium   |
+| SA3 | Company-wide SSO is sufficient for authentication                                         | High     |
+| SA4 | No GDPR or other compliance requirements, as the tool is for experimental use only        | N/a      |
+| SA5 | The tool should be built with a modular architecture to allow for future updates.         | N/a      |
+| SA6 | The tools implementation shall leverage the cloud provider’s infrastructure for scaling   | N/a      |
 
 ---
 
-
-## 4. System Features
-
-The interface prioritizes simplicity and intuitive interactions.
-
-### 4.1 Data Visualization
-
-- Rendering Technology: Use WebGL or Canvas for GPU-accelerated rendering of large datasets.
-- Visualization Modes:
-  - Overview Mode: Aggregated view of all channels (e.g., heatmap or stacked traces).
-  - Detail Mode: High-resolution view of a single channel or subset of channels.
-- Dynamic Loading: Implement pre-fetching and server-side downsampling to avoid blank screens and optimize performance.
-
----
-
-### 4.2 User Interaction
-
-- ROIs:
-  - Users can mark, name, tag, and categorize ROIs.
-  - ROIs are persisted in a database and retrievable across sessions.
-  - User-specific ROIs are supported (could-have).
-- Measurements:
-  - Hover-over tooltips for current voltage/current values.
-  - Duration measurement for selected regions (e.g., drag-to-select).
-- Interaction Methods:
-  - Drag-and-drop for selecting ROIs.
-  - Keyboard shortcuts for power users (e.g., zoom in/out, navigate ROIs).
-  - Touch support for tablets (could-have).
-
----
-
-### 4.3 Cloud Hosting and Data Management
-
-- Cloud Platform: Deployment on AWS, GCP, or Azure, with serverless functions for dynamic processing.
-- Data Storage:
-  - Raw data stored in blob storage (e.g., AWS S3, Azure Blob Storage).
-  - Metadata and annotations stored in a database (e.g., PostgreSQL, MongoDB).
-- Authentication: Company-wide SSO for secure access.
-- Scalability: Auto-scaling and load balancing to handle concurrent users.
-
----
-
----
-
----
-
----
 
 ## 7. Appendices
 
