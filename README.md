@@ -5,7 +5,7 @@ A system for visualizing large time-series datasets with pan/zoom capabilities u
 ## System Overview
 
 - **Backend**: FastAPI server serving downsampled data chunks from Zarr files
-- **Frontend**: React application with Deck.gl for interactive visualization
+- **Frontend**: Next.js application with Deck.gl for interactive visualization
 - **Data**: 48-channel time-series data at 2.5kHz sampling rate (~657MB)
 
 ## Directory Structure
@@ -62,10 +62,10 @@ cd src/frontend
 npm install
 ```
 
-2. **Start the React development server:**
+2. **Start the Next.js development server:**
 
 ```bash
-npm start # Assuming still in frontend dir
+npm run dev
 ```
 
 The frontend will be available at `http://localhost:3000`
@@ -153,6 +153,9 @@ The system uses Zarr format for efficient storage and access of large time-serie
 
 ## Frontend Features
 
+- **Next.js App Router**: Modern Next.js structure with app router
+- **Client Components**: Interactive components with "use client" directive
+- **CSS Modules**: Scoped styling with CSS modules
 - **Interactive Visualization**: Deck.gl LineLayer for rendering traces
 - **Real-time Updates**: requestAnimationFrame for smooth pan/zoom simulation
 - **Data Fetching**: Axios for API communication
@@ -167,12 +170,22 @@ The system uses Zarr format for efficient storage and access of large time-serie
 - Validates all input parameters
 - Returns appropriate HTTP status codes
 
+### Frontend Implementation
+
+- **Dynamic Components**: Deck.gl components use `dynamic(() => import(), { ssr: false })` to avoid server-side rendering issues
+- **Correct Imports**: Use `DeckGL` from `@deck.gl/react` (not `Deck`)
+- **Client Components**: All interactive components use "use client" directive
+- **CSS Modules**: Scoped styling with CSS modules for better maintainability
+- **App Router**: Uses Next.js 13+ app router structure for improved performance
+
 ### Frontend Performance
 
-- Deck.gl provides GPU-accelerated rendering
-- Data is fetched in chunks based on viewport position
-- requestAnimationFrame ensures smooth 60fps updates
-- Loading states provide user feedback
+- **Next.js Optimization**: Automatic code splitting and optimized builds
+- **Dynamic Imports**: Deck.gl components loaded dynamically to avoid SSR issues
+- **Deck.gl**: GPU-accelerated rendering for large datasets
+- **Chunked Data Fetching**: Data fetched in chunks based on viewport position
+- **Smooth Animation**: requestAnimationFrame ensures 60fps updates
+- **Loading States**: User feedback during data loading
 
 ## Troubleshooting
 
@@ -187,6 +200,7 @@ The system uses Zarr format for efficient storage and access of large time-serie
 - **Dependency errors**: Run `npm install`
 - **CORS issues**: Backend has CORS enabled for all origins
 - **Connection refused**: Ensure backend is running on port 8000
+- **Build errors with Deck.gl**: Ensure dynamic imports are used: `dynamic(() => import('./components/DeckComponent'), { ssr: false })` and use correct import `DeckGL` from `@deck.gl/react`
 
 ## Future Improvements
 

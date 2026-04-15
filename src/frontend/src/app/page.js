@@ -1,10 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Deck } from '@deck.gl/core';
-import { LineLayer } from '@deck.gl/layers';
-import axios from 'axios';
-import './App.css';
+"use client";
 
-function App() {
+import React, { useState, useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
+import axios from 'axios';
+import styles from './page.module.css';
+
+// Dynamically import Deck.gl components to avoid SSR issues
+const DeckVisualization = dynamic(
+  () => import('./components/DeckVisualization'),
+  { ssr: false }
+);
+
+export default function Home() {
   const [data, setData] = useState(null);
   const [metadata, setMetadata] = useState(null);
   const [viewport, setViewport] = useState({
@@ -13,7 +20,6 @@ function App() {
     zoom: 1
   });
   const [isLoading, setIsLoading] = useState(false);
-  const deckRef = useRef(null);
   const animationRef = useRef(null);
   
   // Fetch metadata on mount
@@ -94,33 +100,10 @@ function App() {
     }
   };
   
-  const renderLayers = () => {
-    if (!data || !data.data || data.data.length === 0) {
-      return [];
-    }
-    
-    // Convert time-series data to coordinates for LineLayer
-    const points = data.data.map((value, index) => [
-      index / data.sample_rate, // x = time
-      value * 100 // y = voltage (scaled for visibility)
-    ]);
-    
-    return [
-      new LineLayer({
-        id: 'trace-layer',
-        data: [{ path: points }],
-        getPath: d => d.path,
-        getColor: [255, 0, 0],
-        getWidth: 2,
-        widthUnits: 'pixels'
-      })
-    ];
-  };
-  
   return (
-    <div className="app">
+    <div className={styles.app}>
       <h1>Trace Viewer</h1>
-      <div className="info">
+      <div className={styles.info}>
         {metadata && (
           <div>
             <p>Device: {metadata.device_id}</p>
@@ -131,21 +114,7 @@ function App() {
         )}
         {isLoading && <p>Loading data...</p>}
       </div>
-      <div className="deck-container">
-        <Deck
-          ref={deckRef}
-          initialViewState={
-            {
-              target: [5, 0],
-              zoom: viewport.zoom
-            }
-          }
-          controller={true}
-          layers={renderLayers()}
-        />
-      </div>
+      <DeckVisualization data={data} viewport={viewport} />
     </div>
   );
 }
-
-export default App;
