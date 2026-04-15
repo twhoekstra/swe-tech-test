@@ -15,7 +15,8 @@ Miscellaneous thoughts:
 allow them to add landmarks.
 - What is more expensive: compute or storage?
 - Trade off fast vs accurate: can downsample behind the scenes quickly but does that effect the interpretation of scientists
-
+- Where in the process do we handle the digitization? Maybe all the way at the end during visualization?
+Although there might be a problem with downsampling integers.
 
 Next step: refine requirements.
 Questions:
@@ -32,3 +33,17 @@ Think about:
 - Hosting
 - Risks
 - How to build
+
+
+### Step 2: refining requirements
+Challenges in order of importance:
+- Real-Time Data Visualization
+- Cloud Hosting & Scalability
+- Data Management
+- ROI Management
+
+Focusing on first challenge
+
+Google, 
+
+Dont like plotly locked down selection
