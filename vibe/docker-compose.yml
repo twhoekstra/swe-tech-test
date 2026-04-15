@@ -7,10 +7,11 @@ services:
     volumes:
       - ${PROJECT_PATH}:/repo
       - uv-cache:/root/.cache/uv # UV cache persistence
-      - /repo/.venv
+      - /repo/.venv # Exclude
       - /repo/build
       - /repo/out
-      - ~/.vibe_docker:/root/.vibe
+      - /repo/vibe
+      - ${PROJECT_PATH}/vibe/.vibe:/root/.vibe # Mistral Vibe config
     environment:
       - UV_CACHE_DIR=/root/.cache/uv
 
