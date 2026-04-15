@@ -1,0 +1,18 @@
+services:
+  vibe:
+    build: .
+    image: mistral-vibe-uv-tech-test
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${PROJECT_PATH}:/repo
+      - uv-cache:/root/.cache/uv # UV cache persistence
+      - /repo/.venv
+      - /repo/build
+      - /repo/out
+      - ~/.vibe_docker:/root/.vibe
+    environment:
+      - UV_CACHE_DIR=/root/.cache/uv
+
+volumes:
+  uv-cache:

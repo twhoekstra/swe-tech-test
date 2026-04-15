@@ -1,0 +1,1 @@
+alias vibed="cd vibe; docker-compose run --rm vibe; cd .."

@@ -1,0 +1,33 @@
+FROM ghcr.io/astral-sh/uv:debian-slim
+
+# Install system dependencies for C++ and git
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    build-essential \
+    cmake \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN uv python install 3.14 --default
+RUN uv tool install mistral-vibe
+
+
+# Install Mistral Vibe as a global tool
+RUN uv tool install mistral-vibe
+
+# Set environment variables for uv performance in Docker
+ENV UV_LINK_MODE=copy
+ENV UV_COMPILE_BYTECODE=1
+ENV PATH="/repo/.venv/bin:$PATH"
+
+WORKDIR /repo
+
+# Create an entrypoint script to sync the environment on start
+RUN echo '#!/bin/bash\n\
+if [ -f "pyproject.toml" ]; then\n\
+    echo "Syncing Linux-native virtual environment..."\n\
+    uv sync\n\
+fi\n\
+exec vibe "$@"' > /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
