@@ -8,7 +8,7 @@ import os
 # Add the backend to the path
 sys.path.insert(0, "/repo/src/backend")
 
-from app.main import app, DataRequest, get_zarr_store
+from backend.app.main import app, DataRequest, get_zarr_store, time_to_samples
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
@@ -131,7 +131,6 @@ def test_zarr_store_access():
 
 def test_time_to_samples():
     """Test time to sample conversion."""
-    from app.main import time_to_samples
     
     start_sample, end_sample = time_to_samples(0.0, 1.0, 2500.0)
     assert start_sample == 0
