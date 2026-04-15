@@ -1,0 +1,19 @@
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.info {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.deck-container {
+  height: 600px;
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
