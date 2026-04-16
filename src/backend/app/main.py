@@ -79,51 +79,48 @@ async def get_data(request: DataRequest):
     """Get time-series data for a specific time range and channel."""
     try:
         store = get_zarr_store()
-        
-        # Validate channel
-        num_channels = store.attrs.get("number_of_channels", 48)
-        if request.channel < 0 or request.channel >= num_channels:
-            raise HTTPException(status_code=400, detail=f"Channel must be between 0 and {num_channels-1}")
-        
-        # Validate time range
-        duration = store.attrs.get("duration_sec", 5400.0)
-        if request.start_time < 0 or request.end_time > duration:
-            raise HTTPException(status_code=400, detail=f"Time range must be within [0, {duration}] seconds")
-        if request.start_time >= request.end_time:
-            raise HTTPException(status_code=400, detail="start_time must be less than end_time")
-        
-        # Convert time to samples
-        sample_rate = store.attrs.get("sample_rate_hz", 2500.0)
-        start_sample, end_sample = time_to_samples(request.start_time, request.end_time, sample_rate)
-        
-        # Read data
-        if request.data_type == "voltage":
-            data = store["voltage_data"][request.channel, start_sample:end_sample]
-            scale = store.attrs.get("voltage_scale", 0.0625)
-        elif request.data_type == "current":
-            data = store["current_data"][request.channel, start_sample:end_sample]
-            scale = store.attrs.get("current_scale", 0.06103515625)
-        else:
-            raise HTTPException(status_code=400, detail="data_type must be 'voltage' or 'current'")
-        
-        # Convert to physical units
-        data_physical = data.astype("float32") * scale
-        
-        return {
-            "channel": request.channel,
-            "start_time": request.start_time,
-            "end_time": request.end_time,
-            "sample_rate": sample_rate,
-            "data": data_physical.tolist(),
-            "data_type": request.data_type,
-            "unit": "mV" if request.data_type == "voltage" else "pA"
-        }
-        
-    except HTTPException:
-        # Re-raise HTTP exceptions as-is
-        raise
-    except Exception as e:
+    except IOError as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+    # Validate channel
+    num_channels = store.attrs.get("number_of_channels", 48)
+    if request.channel < 0 or request.channel >= num_channels:
+        raise HTTPException(status_code=400, detail=f"Channel must be between 0 and {num_channels-1}")
+
+    # Validate time range
+    duration = store.attrs.get("duration_sec", 5400.0)
+    if request.start_time < 0 or request.end_time > duration:
+        raise HTTPException(status_code=400, detail=f"Time range must be within [0, {duration}] seconds")
+    if request.start_time >= request.end_time:
+        raise HTTPException(status_code=400, detail="start_time must be less than end_time")
+
+    # Convert time to samples
+    sample_rate = store.attrs.get("sample_rate_hz", 2500.0)
+    start_sample, end_sample = time_to_samples(request.start_time, request.end_time, sample_rate)
+
+    # Read data
+    if request.data_type == "voltage":
+        data = store["voltage_data"][request.channel, start_sample:end_sample]
+        scale = store.attrs.get("voltage_scale", 0.0625)
+    elif request.data_type == "current":
+        data = store["current_data"][request.channel, start_sample:end_sample]
+        scale = store.attrs.get("current_scale", 0.06103515625)
+    else:
+        raise HTTPException(status_code=400, detail="data_type must be 'voltage' or 'current'")
+
+    # Convert to physical units
+    data_physical = data.astype("float32") * scale
+
+    return {
+        "channel": request.channel,
+        "start_time": request.start_time,
+        "end_time": request.end_time,
+        "sample_rate": sample_rate,
+        "data": data_physical.tolist(),
+        "data_type": request.data_type,
+        "unit": "mV" if request.data_type == "voltage" else "pA"
+    }
+
 
 if __name__ == "__main__":
     import uvicorn
