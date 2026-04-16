@@ -51,7 +51,7 @@ export default function Home() {
   // Fetch initial data when metadata is available
   useEffect(() => {
     if (metadata) {
-      fetchData(200, 300);
+      fetchData(200, 210);
     }
   }, [metadata]);
   

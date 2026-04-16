@@ -16,95 +16,83 @@ export default function D3Visualization({ data, viewport }) {
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
-    // Set up dimensions
+    // Set up dimensions (matching ObservableHQ example structure)
     const width = 800;
     const height = 500;
-    const margin = { top: 30, right: 20, bottom: 50, left: 50 };
-    
+    const marginTop = 30;
+    const marginRight = 20;
+    const marginBottom = 50;
+    const marginLeft = 50;
+
     // Calculate chart dimensions
-    const chartWidth = width - margin.left - margin.right;
-    const chartHeight = height - margin.top - margin.bottom;
-    
-    // Create main SVG group with margins
-    const mainGroup = svg
-      .attr("width", width)
-      .attr("height", height)
-      .append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
-    
-    // Create a clip path for the zoomable area
-    mainGroup.append("defs").append("clipPath")
-      .attr("id", "clip")
-      .append("rect")
-      .attr("width", chartWidth)
-      .attr("height", chartHeight);
-    
-    // Create a group for the zoomable content (data line only)
-    const zoomGroup = mainGroup.append("g")
-      .attr("clip-path", "url(#clip)");
+    const chartWidth = width - marginLeft - marginRight;
+    const chartHeight = height - marginTop - marginBottom;
 
     // Convert time-series data
     const timeValues = data.data.map((value, index) => index / data.sample_rate);
     const voltageValues = data.data.map(value => value * 100); // Scale for visibility
 
-    // Calculate data domains
-    const timeMin = d3.min(timeValues);
-    const timeMax = d3.max(timeValues);
-    const voltageMin = d3.min(voltageValues);
-    const voltageMax = d3.max(voltageValues);
-
-    // Add some padding to the domains
-    const timePadding = (timeMax - timeMin) * 0.05; // 5% padding
-    const voltagePadding = (voltageMax - voltageMin) * 0.1; // 10% padding
-
-    // Set up scales - initially fit to data domain, then respect viewport
-    const xDomain = viewport.x !== 0 || viewport.y !== 0 
-      ? [viewport.x, viewport.x + 10] 
-      : [timeMin - timePadding, timeMax + timePadding];
-
-    const yDomain = [voltageMin - voltagePadding, voltageMax + voltagePadding];
-
+    // Set up scales
     const xScale = d3.scaleLinear()
-      .domain(xDomain)
-      .range([0, chartWidth])
+      .domain([d3.min(timeValues), d3.max(timeValues)])
+      .range([marginLeft, width - marginRight])
       .nice();
 
     const yScale = d3.scaleLinear()
-      .domain(yDomain)
-      .range([chartHeight, 0])
+      .domain([d3.min(voltageValues), d3.max(voltageValues)])
+      .range([height - marginBottom, marginTop])
       .nice();
+
+    // Create the SVG container
+    svg
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height]);
+
+    // Create a clip-path with unique ID
+    const clipId = "clip-" + Math.random().toString(36).substr(2, 9);
+
+    svg.append("clipPath")
+      .attr("id", clipId)
+      .append("rect")
+      .attr("x", marginLeft)
+      .attr("y", marginTop)
+      .attr("width", chartWidth)
+      .attr("height", chartHeight);
 
     // Create line generator
     const line = d3.line()
+      .defined(d => !isNaN(d))
       .x((d, i) => xScale(timeValues[i]))
       .y(d => yScale(d))
       .curve(d3.curveLinear);
 
-    // Add X axis to main group (not zoomable)
-    const xAxisGroup = mainGroup.append("g")
-      .attr("transform", `translate(0,${chartHeight})`)
-      .call(d3.axisBottom(xScale));
-    
-    xAxisGroup.append("text")
-      .attr("x", chartWidth / 2)
+    // Create X axis
+    const xAxis = svg.append("g")
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(d3.axisBottom(xScale).ticks(width / 80).tickSizeOuter(0));
+
+    xAxis.append("text")
+      .attr("x", width / 2)
       .attr("y", 40)
       .attr("fill", "#000")
       .attr("text-anchor", "middle")
       .text("Time (s)");
 
-    // Add Y axis to main group (not zoomable)
-    const yAxisGroup = mainGroup.append("g")
-      .call(d3.axisLeft(yScale));
-    
-    yAxisGroup.append("text")
+    // Create Y axis
+    const yAxis = svg.append("g")
+      .attr("transform", `translate(${marginLeft},0)`)
+      .call(d3.axisLeft(yScale).ticks(null, "s"));
+
+    yAxis.append("text")
       .attr("transform", "rotate(-90)")
       .attr("y", -40)
-      .attr("x", -chartHeight / 2)
+      .attr("x", -height / 2)
       .attr("fill", "#000")
       .attr("text-anchor", "middle")
       .text("Current (scaled)");
 
-    // Add title (not zoomable)
+    // Add title
     svg.append("text")
       .attr("x", width / 2)
       .attr("y", 20)
@@ -113,31 +101,37 @@ export default function D3Visualization({ data, viewport }) {
       .style("font-weight", "bold")
       .text("Current Trace");
 
-    // Draw the line in zoom group
-    const linePath = zoomGroup.append("path")
+    // Create a group for the zoomable content
+    const zoomGroup = svg.append("g");
+
+    // Move the path into the zoom group
+    const path = zoomGroup.append("path")
       .datum(voltageValues)
+      .attr("clip-path", `url(#${clipId})`)
       .attr("fill", "none")
       .attr("stroke", "#ff0000")
       .attr("stroke-width", 2)
       .attr("d", line);
-    
-    // Add zoom behavior
+
+    // Create zoom behavior with unlimited panning
     const zoom = d3.zoom()
-      .scaleExtent([0.5, 10]) // Minimum and maximum zoom levels
+      .scaleExtent([1, 32])
+      .extent([[0, 0], [width, height]])  // Full panning area
+      .translateExtent([[-Infinity, -Infinity], [Infinity, Infinity]])  // Unlimited panning in both directions
       .on("zoom", (event) => {
-        // Apply zoom transform only to the data (zoom group)
+        // Apply transform to the zoom group
         zoomGroup.attr("transform", event.transform);
         
-        // Update axes with the new transformed scales
-        const newXScale = event.transform.rescaleX(xScale);
-        const newYScale = event.transform.rescaleY(yScale);
+        // Update both axes with the new scales
+        const xz = event.transform.rescaleX(xScale);
+        const yz = event.transform.rescaleY(yScale);
         
-        xAxisGroup.call(d3.axisBottom(newXScale));
-        yAxisGroup.call(d3.axisLeft(newYScale));
+        xAxis.call(d3.axisBottom(xz).ticks(width / 80).tickSizeOuter(0));
+        yAxis.call(d3.axisLeft(yz).ticks(height / 40).tickSizeOuter(0));
       });
-    
-    // Apply zoom behavior to the main SVG
-    mainGroup.call(zoom);
+
+    // Apply zoom behavior to the SVG
+    svg.call(zoom);
 
   }, [data, viewport]);
 
