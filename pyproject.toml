@@ -13,6 +13,7 @@ dependencies = [
     "pytest>=9.0.3",
     "python-multipart>=0.0.26",
     "requests>=2.33.1",
+    "ruff>=0.15.10",
     "uvicorn>=0.44.0",
     "zarr>=3.1.6",
 ]
