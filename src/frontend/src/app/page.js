@@ -126,7 +126,7 @@ export default function Home() {
   return (
     <div className={styles.app}>
       <h1>Trace Viewer</h1>
-      <div style={{ display: "flex", gap: "20px", marginBottom: "10px" }}>
+      <div style={{ display: "flex", gap: "20px", marginBottom: "10px", minHeight: "100px" }}>
         <div className={styles.info} style={{ width: "70%" }}>
           <h3>Metadata</h3>
           {metadata && (
@@ -146,7 +146,7 @@ export default function Home() {
           </button>
         </div>
       </div>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ height: "calc(100vh - 180px)", width: "100%" }}>
         <D3Visualization data={data} viewport={viewport} clipEnabled={clipEnabled} />
       </div>
     </div>
