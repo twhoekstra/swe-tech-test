@@ -9,10 +9,7 @@ import subprocess
 import requests
 import signal
 
-# Add the backend to the path
-sys.path.insert(0, "/repo/src/backend")
-
-from app.main import app
+from backend.app.main import app, DataRequest, get_zarr_store, time_to_samples
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
