@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 import os
+from http import HTTPStatus
 
 app = FastAPI(title="Time-Series Data API")
 
@@ -72,7 +73,7 @@ async def get_metadata():
             voltage_offset=store.attrs.get("voltage_offset", 0),
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
 
 @app.post("/data")
 async def get_data(request: DataRequest):
@@ -80,19 +81,19 @@ async def get_data(request: DataRequest):
     try:
         store = get_zarr_store()
     except IOError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
 
     # Validate channel
     num_channels = store.attrs.get("number_of_channels", 48)
     if request.channel < 0 or request.channel >= num_channels:
-        raise HTTPException(status_code=400, detail=f"Channel must be between 0 and {num_channels-1}")
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=f"Channel must be between 0 and {num_channels-1}")
 
     # Validate time range
     duration = store.attrs.get("duration_sec", 5400.0)
     if request.start_time < 0 or request.end_time > duration:
-        raise HTTPException(status_code=400, detail=f"Time range must be within [0, {duration}] seconds")
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=f"Time range must be within [0, {duration}] seconds")
     if request.start_time >= request.end_time:
-        raise HTTPException(status_code=400, detail="start_time must be less than end_time")
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="start_time must be less than end_time")
 
     # Convert time to samples
     sample_rate = store.attrs.get("sample_rate_hz", 2500.0)
@@ -106,7 +107,7 @@ async def get_data(request: DataRequest):
         data = store["current_data"][request.channel, start_sample:end_sample]
         scale = store.attrs.get("current_scale", 0.06103515625)
     else:
-        raise HTTPException(status_code=400, detail="data_type must be 'voltage' or 'current'")
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="data_type must be 'voltage' or 'current'")
 
     # Convert to physical units
     data_physical = data.astype("float32") * scale

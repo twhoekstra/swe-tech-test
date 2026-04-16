@@ -4,6 +4,7 @@
 import pytest
 import sys
 import os
+from http import HTTPStatus
 
 from backend.app.main import app, DataRequest, get_zarr_store, time_to_samples
 from fastapi.testclient import TestClient
@@ -14,7 +15,7 @@ client = TestClient(app)
 def test_get_metadata():
     """Test the metadata endpoint."""
     response = client.get("/metadata")
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     
     data = response.json()
     assert "device_id" in data
@@ -39,7 +40,7 @@ def test_get_data_valid_request():
     }
     
     response = client.post("/data", json=request_data)
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     
     data = response.json()
     assert "channel" in data
@@ -67,7 +68,7 @@ def test_get_data_current():
     }
     
     response = client.post("/data", json=request_data)
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     
     data = response.json()
     assert data["data_type"] == "current"
@@ -85,7 +86,7 @@ def test_get_data_invalid_channel():
     }
     
     response = client.post("/data", json=request_data)
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert "Channel must be between 0 and 47" in response.text
 
 
@@ -99,7 +100,7 @@ def test_get_data_invalid_time_range():
     }
     
     response = client.post("/data", json=request_data)
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert "Time range must be within" in response.text
 
 
@@ -113,7 +114,7 @@ def test_get_data_invalid_data_type():
     }
     
     response = client.post("/data", json=request_data)
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert "data_type must be" in response.text
 
 
