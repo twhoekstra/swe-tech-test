@@ -1,19 +1,22 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import styles from "../page.module.css";
 
 export default function D3Visualization({ data, viewport, clipEnabled }) {
   const svgRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
 
   useEffect(() => {
     if (!data || !data.data || data.data.length === 0 || !svgRef.current) {
       return;
     }
 
-    const width = 800;
-    const height = 500;
+    // Get container dimensions
+    const container = svgRef.current.parentElement;
+    const width = container.clientWidth || dimensions.width;
+    const height = container.clientHeight || dimensions.height;
     const marginTop = 30;
     const marginRight = 20;
     const marginBottom = 50;
@@ -104,6 +107,12 @@ export default function D3Visualization({ data, viewport, clipEnabled }) {
 
     // Create the SVG container
     svg
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .attr("preserveAspectRatio", "none");
+
+    svg
       .append("clipPath")
       .attr("id", "clip")
       .append("rect")
@@ -167,6 +176,24 @@ export default function D3Visualization({ data, viewport, clipEnabled }) {
       path.attr("clip-path", clipEnabled ? "url(#clip)" : null);
     }
   }, [clipEnabled]);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (svgRef.current && svgRef.current.parentElement) {
+        const container = svgRef.current.parentElement;
+        setDimensions({
+          width: container.clientWidth,
+          height: container.clientHeight
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Set initial dimensions
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!data || !data.data || data.data.length === 0) {
     return <div className={styles.deckContainer}>No data to display</div>;
