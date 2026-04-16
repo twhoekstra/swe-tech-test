@@ -80,11 +80,10 @@ export default function D3Visualization({ data, viewport }) {
     // Create line generator, will change later
     console.log(data_table);
 
-    const line = d3
-      .line()
+    const line = (data_table, x, y) => d3.line()
       .curve(d3.curveLinear)
       .x((d) => x(d.x))
-      .y((d) => y(d.y));
+      .y((d) => y(d.y))(data_table);
 
     // Create the zoom behavior.
     const zoom = d3
@@ -127,7 +126,7 @@ export default function D3Visualization({ data, viewport }) {
       .attr("fill", "none")
       .attr("stroke", "#ff0000")
       .attr("stroke-width", 2)
-      .attr("d", line(data_table));
+      .attr("d", line(data_table, x, y));
     // .datum(dataValues)
 
     const gx = svg
@@ -147,7 +146,7 @@ export default function D3Visualization({ data, viewport }) {
     function zoomed(event) {
       const xz = event.transform.rescaleX(x);
       const yz = event.transform.rescaleY(y);
-      path.attr("d", line(data_table));
+      path.attr("d", line(data_table, x, y));
       gx.call(xAxis, xz);
       gy.call(yAxis, yz);
     }
