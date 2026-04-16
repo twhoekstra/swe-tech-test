@@ -51,7 +51,7 @@ export default function Home() {
   // Fetch initial data when metadata is available
   useEffect(() => {
     if (metadata) {
-      fetchData(0, 10); // Fetch first 10 seconds
+      fetchData(200, 300);
     }
   }, [metadata]);
   
@@ -94,7 +94,7 @@ export default function Home() {
       const response = await axios.post('http://localhost:8000/data', {
         start_time: startTime,
         end_time: endTime,
-        channel: 0,
+        channel: 1,
         data_type: 'current'
       });
       
