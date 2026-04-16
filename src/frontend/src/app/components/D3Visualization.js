@@ -146,7 +146,7 @@ export default function D3Visualization({ data, viewport }) {
     function zoomed(event) {
       const xz = event.transform.rescaleX(x);
       const yz = event.transform.rescaleY(y);
-      path.attr("d", line(data_table, x, y));
+      path.attr("d", line(data_table, xz, yz));
       gx.call(xAxis, xz);
       gy.call(yAxis, yz);
     }
