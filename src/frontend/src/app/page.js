@@ -20,6 +20,7 @@ export default function Home() {
     zoom: 1
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [clipEnabled, setClipEnabled] = useState(true);
   const animationRef = useRef(null);
   
   // Set default file and fetch metadata on mount
@@ -125,19 +126,28 @@ export default function Home() {
   return (
     <div className={styles.app}>
       <h1>Trace Viewer</h1>
-      <div className={styles.info}>
-        {metadata && (
-          <div>
-            <p>Device: {metadata.device_id}</p>
-            <p>Channels: {metadata.number_of_channels}</p>
-            <p>Sample Rate: {metadata.sample_rate_hz} Hz</p>
-            <p>Duration: {metadata.duration_sec} seconds</p>
-          </div>
-        )}
-        {/*{isLoading && <p>Loading data...</p>}*/}
+      <div style={{ display: "flex", gap: "20px" }}>
+        <div className={styles.info} style={{ width: "70%" }}>
+          <h3>Metadata</h3>
+          {metadata && (
+            <div>
+              <p>Device: {metadata.device_id}</p>
+              <p>Channels: {metadata.number_of_channels}</p>
+              <p>Sample Rate: {metadata.sample_rate_hz} Hz</p>
+              <p>Duration: {metadata.duration_sec} seconds</p>
+            </div>
+          )}
+          {/*{isLoading && <p>Loading data...</p>}*/}
+        </div>
+        <div style={{ background: "#f5f5f5", padding: "15px", borderRadius: "5px", width: "30%" }}>
+          <h3>Dev</h3>
+          <button onClick={() => setClipEnabled(!clipEnabled)} style={{ marginTop: "10px" }}>
+            {clipEnabled ? "Disable Clip" : "Enable Clip"}
+          </button>
+        </div>
       </div>
       <div className={styles.plotlyContainer}>
-        <D3Visualization data={data} viewport={viewport} />
+        <D3Visualization data={data} viewport={viewport} clipEnabled={clipEnabled} />
       </div>
     </div>
   );

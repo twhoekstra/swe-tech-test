@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import styles from "../page.module.css";
 
-export default function D3Visualization({ data, viewport }) {
+export default function D3Visualization({ data, viewport, clipEnabled }) {
   const svgRef = useRef(null);
 
   useEffect(() => {
@@ -22,6 +22,9 @@ export default function D3Visualization({ data, viewport }) {
     // Clear previous SVG content
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
+
+    // Store path reference for clip updates
+    let pathRef = null;
 
     // Calculate chart dimensions
     const chartWidth = width - marginLeft - marginRight;
@@ -106,11 +109,8 @@ export default function D3Visualization({ data, viewport }) {
       .append("rect")
       .attr("x", marginLeft)
       .attr("y", marginTop)
-      .attr("width", width - marginLeft - marginRight)
-      .attr("height", height - marginTop - marginBottom)
-      .attr("width", width)
-      .attr("height", height)
-      .attr("viewBox", [0, 0, width, height]);
+      .attr("width", chartWidth)
+      .attr("height", chartHeight);
     svg
       .append("text")
       .attr("x", width / 2)
@@ -122,11 +122,13 @@ export default function D3Visualization({ data, viewport }) {
 
     const path = svg
       .append("path")
-      .attr("clip-path", "url(#clip)")
+      .attr("clip-path", clipEnabled ? "url(#clip)" : null)
       .attr("fill", "none")
       .attr("stroke", "#ff0000")
       .attr("stroke-width", 2)
       .attr("d", line(data_table, x, y));
+    
+
     // .datum(dataValues)
 
     const gx = svg
@@ -154,6 +156,17 @@ export default function D3Visualization({ data, viewport }) {
     // Initial zoom
     svg.call(zoom);
   }, [data, viewport]);
+
+  // Update clip-path when clipEnabled changes
+  useEffect(() => {
+    if (!svgRef.current) return;
+    
+    const svg = d3.select(svgRef.current);
+    const path = svg.select("path");
+    if (path.node()) {
+      path.attr("clip-path", clipEnabled ? "url(#clip)" : null);
+    }
+  }, [clipEnabled]);
 
   if (!data || !data.data || data.data.length === 0) {
     return <div className={styles.deckContainer}>No data to display</div>;
