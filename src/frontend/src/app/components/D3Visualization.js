@@ -50,15 +50,16 @@ export default function D3Visualization({ data, viewport }) {
       .attr("viewBox", [0, 0, width, height]);
 
     // Create a clip-path with unique ID
-    const clipId = "clip-" + Math.random().toString(36).substr(2, 9);
+    const clip = DOM.uid("clip");
 
     svg.append("clipPath")
-      .attr("id", clipId)
+      .attr("id", clip.id)
       .append("rect")
       .attr("x", marginLeft)
       .attr("y", marginTop)
-      .attr("width", chartWidth)
-      .attr("height", chartHeight);
+      .attr("width", width - marginLeft - marginRight)
+      .attr("height", height - marginTop - marginBottom);
+
 
     // Create line generator
     const line = d3.line()
@@ -73,6 +74,7 @@ export default function D3Visualization({ data, viewport }) {
       .call(d3.axisBottom(xScale).ticks(width / 80).tickSizeOuter(0));
 
     xAxis.append("text")
+        .attr("clip-path", clip)
       .attr("x", width / 2)
       .attr("y", 40)
       .attr("fill", "#000")
