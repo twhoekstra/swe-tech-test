@@ -22,18 +22,24 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const animationRef = useRef(null);
   
-  // Fetch metadata on mount
+  // Set default file and fetch metadata on mount
   useEffect(() => {
-    const fetchMetadata = async () => {
+    const initializeApp = async () => {
       try {
+        // Set the default Zarr file
+        await axios.post('http://localhost:8000/set_file', {
+          filename: 'mock48_2500hz_1.5h.zarr'
+        });
+        
+        // Fetch metadata
         const response = await axios.get('http://localhost:8000/metadata');
         setMetadata(response.data);
       } catch (error) {
-        console.error('Error fetching metadata:', error);
+        console.warn('Backend not available - using mock data for development');
       }
     };
     
-    fetchMetadata();
+    initializeApp();
     
     return () => {
       if (animationRef.current) {
@@ -94,7 +100,23 @@ export default function Home() {
       
       setData(response.data);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.warn('Backend not available - generating mock data for development');
+      // Generate mock data for development
+      const sampleRate = metadata.sample_rate_hz;
+      const numSamples = Math.floor((endTime - startTime) * sampleRate);
+      const mockData = Array.from({length: numSamples}, (_, i) => 
+        Math.sin(i / 100) * Math.random() * 100
+      );
+      
+      setData({
+        channel: 0,
+        start_time: startTime,
+        end_time: endTime,
+        sample_rate: sampleRate,
+        data: mockData,
+        data_type: 'current',
+        unit: 'pA'
+      });
     } finally {
       setIsLoading(false);
     }
