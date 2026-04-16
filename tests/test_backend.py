@@ -6,14 +6,56 @@ import sys
 import os
 from http import HTTPStatus
 
-from backend.app.main import app, DataRequest, get_zarr_store, time_to_samples
+from src.backend.app.main import app, DataRequest, get_store, time_to_samples
 from fastapi.testclient import TestClient
 
-client = TestClient(app)
+
+@pytest.fixture()
+def filename() -> str:
+    return "mock48_2500hz_1.5h.zarr"
 
 
-def test_get_metadata():
+@pytest.fixture()
+def client_unset():
+    """Test client with no file set."""
+    return TestClient(app)
+
+
+@pytest.fixture()
+def client(client_unset, filename):
+    """Test client with default file set."""
+    # Set the file before running tests
+    request_data = {"filename": filename}
+    client_unset.post("/set_file", json=request_data)
+    return client_unset
+
+def test_set_file(client_unset, filename):
+    """Test setting the file to use for data operations."""
+    request_data = {"filename": filename}
+    
+    response = client_unset.post("/set_file", json=request_data)
+    assert response.status_code == HTTPStatus.OK
+    
+    data = response.json()
+    assert "message" in data
+    assert "file_path" in data
+    assert "status" in data
+    assert data["status"] == "success"
+    assert filename in data["message"]
+
+
+def test_set_file_nonexistent(client_unset):
+    """Test setting a file that doesn't exist."""
+    request_data = {"filename": "nonexistent_file.zarr"}
+    
+    response = client_unset.post("/set_file", json=request_data)
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert "does not exist" in response.text
+
+
+def test_get_metadata(client):
     """Test the metadata endpoint."""
+
     response = client.get("/metadata")
     assert response.status_code == HTTPStatus.OK
     
@@ -30,7 +72,7 @@ def test_get_metadata():
     assert data["duration_sec"] == 5400.0
 
 
-def test_get_data_valid_request():
+def test_get_data_valid_request(client):
     """Test data endpoint with valid parameters."""
     request_data = {
         "start_time": 0.0,
@@ -58,7 +100,7 @@ def test_get_data_valid_request():
     assert len(data["data"]) == 2500  # 1 second at 2500 Hz
 
 
-def test_get_data_current():
+def test_get_data_current(client):
     """Test data endpoint with current data type."""
     request_data = {
         "start_time": 0.0,
@@ -76,7 +118,7 @@ def test_get_data_current():
     assert len(data["data"]) == 250  # 0.1 second at 2500 Hz
 
 
-def test_get_data_invalid_channel():
+def test_get_data_invalid_channel(client):
     """Test data endpoint with invalid channel."""
     request_data = {
         "start_time": 0.0,
@@ -90,7 +132,7 @@ def test_get_data_invalid_channel():
     assert "Channel must be between 0 and 47" in response.text
 
 
-def test_get_data_invalid_time_range():
+def test_get_data_invalid_time_range(client):
     """Test data endpoint with invalid time range."""
     request_data = {
         "start_time": 6000.0,  # Beyond duration
@@ -104,7 +146,7 @@ def test_get_data_invalid_time_range():
     assert "Time range must be within" in response.text
 
 
-def test_get_data_invalid_data_type():
+def test_get_data_invalid_data_type(client):
     """Test data endpoint with invalid data type."""
     request_data = {
         "start_time": 0.0,
@@ -117,14 +159,6 @@ def test_get_data_invalid_data_type():
     assert response.status_code == HTTPStatus.BAD_REQUEST
     assert "data_type must be" in response.text
 
-
-def test_zarr_store_access():
-    """Test that we can access the Zarr store."""
-    store = get_zarr_store()
-    assert store is not None
-    assert "voltage_data" in store
-    assert "current_data" in store
-    assert store.attrs["number_of_channels"] == 48
 
 
 def test_time_to_samples():

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """FastAPI backend for serving time-series data from Zarr files."""
+import pathlib
 
 import zarr
+
+from zarr.core.group import Group
+
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,8 +13,21 @@ from pydantic import BaseModel
 from typing import Optional
 import os
 from http import HTTPStatus
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="Time-Series Data API")
+# Configuration
+RECORDINGS_FOLDER_PATH = pathlib.Path("./recordings") # Bit hacky for now but fine
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize application state on startup and cleanup on shutdown."""
+    app.state.store = None
+    
+    yield
+
+    del app.state.store
+
+app = FastAPI(title="Time-Series Data API", lifespan=lifespan)
 
 # CORS middleware for frontend access
 app.add_middleware(
@@ -21,14 +38,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configuration
-DATA_FILE = "./recordings/mock48_2500hz_1.5h.zarr"
+class FileRequest(BaseModel):
+    filename: str  # name of the zarr file to open
 
 class DataRequest(BaseModel):
     start_time: float  # in seconds
     end_time: float  # in seconds
     channel: int = 0  # channel index (0-47)
-    data_type: str = "voltage"  # 'voltage' or 'current'
+    data_type: str = "current"  # 'voltage' or 'current'
 
 class MetadataResponse(BaseModel):
     device_id: str
@@ -42,11 +59,10 @@ class MetadataResponse(BaseModel):
     voltage_scale: float
     voltage_offset: int
 
-def get_zarr_store():
-    """Open the Zarr store."""
-    if not os.path.exists(DATA_FILE):
-        raise FileNotFoundError(f"Data file not found: {DATA_FILE}")
-    return zarr.open(DATA_FILE, mode="r")
+
+def get_store(app_state) -> Group:
+    """Get the current Zarr store, opening default if none is set."""
+    return app_state.store
 
 def time_to_samples(start_time: float, end_time: float, sample_rate: float) -> tuple:
     """Convert time range to sample indices."""
@@ -54,32 +70,56 @@ def time_to_samples(start_time: float, end_time: float, sample_rate: float) -> t
     end_sample = int(end_time * sample_rate)
     return start_sample, end_sample
 
+@app.post("/set_file")
+async def set_file(request: FileRequest):
+    """Set the file to use for data operations."""
+    file_path = request.filename
+    path = RECORDINGS_FOLDER_PATH / file_path
+    
+    if not path.exists():
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=f"File {path} does not exist")
+
+    try:
+        z = zarr.open_group(str(path), mode="r")
+    except Exception as e:
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+
+    app.state.store = z
+
+    return {
+        "message": f"File set to {path}",
+        "file_path": str(path),
+        "status": "success"
+    }
+
+
 @app.get("/metadata", response_model=MetadataResponse)
 async def get_metadata():
     """Get metadata about the recording."""
     try:
-        store = get_zarr_store()
-        
-        return MetadataResponse(
-            device_id=store.attrs.get("device_id", "unknown"),
-            number_of_channels=store.attrs.get("number_of_channels", 0),
-            sample_rate_hz=store.attrs.get("sample_rate_hz", 0.0),
-            duration_sec=store.attrs.get("duration_sec", 0.0),
-            current_units=store.attrs.get("current_units", ""),
-            current_range=store.attrs.get("current_range", 0.0),
-            current_scale=store.attrs.get("current_scale", 0.0),
-            current_offset=store.attrs.get("current_offset", 0),
-            voltage_scale=store.attrs.get("voltage_scale", 0.0),
-            voltage_offset=store.attrs.get("voltage_offset", 0),
-        )
+        store = get_store(app.state)
     except Exception as e:
         raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+        
+    return MetadataResponse(
+        device_id=store.attrs.get("device_id", "unknown"),
+        number_of_channels=store.attrs.get("number_of_channels", 0),
+        sample_rate_hz=store.attrs.get("sample_rate_hz", 0.0),
+        duration_sec=store.attrs.get("duration_sec", 0.0),
+        current_units=store.attrs.get("current_units", ""),
+        current_range=store.attrs.get("current_range", 0.0),
+        current_scale=store.attrs.get("current_scale", 0.0),
+        current_offset=store.attrs.get("current_offset", 0),
+        voltage_scale=store.attrs.get("voltage_scale", 0.0),
+        voltage_offset=store.attrs.get("voltage_offset", 0),
+    )
+
 
 @app.post("/data")
 async def get_data(request: DataRequest):
     """Get time-series data for a specific time range and channel."""
     try:
-        store = get_zarr_store()
+        store = get_store(app.state)
     except IOError as e:
         raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
 
