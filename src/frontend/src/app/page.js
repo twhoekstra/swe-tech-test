@@ -5,9 +5,9 @@ import dynamic from 'next/dynamic';
 import axios from 'axios';
 import styles from './page.module.css';
 
-// Dynamically import Deck.gl components to avoid SSR issues
-const DeckVisualization = dynamic(
-  () => import('./components/DeckVisualization'),
+// Import D3 visualization component
+const D3Visualization = dynamic(
+  () => import('./components/D3Visualization'),
   { ssr: false }
 );
 
@@ -50,35 +50,35 @@ export default function Home() {
   }, [metadata]);
   
   // Simulate viewport movement
-  useEffect(() => {
-    if (!metadata || !data) return;
-    
-    let time = 0;
-    const simulateMovement = () => {
-      // Simulate panning by updating viewport position
-      time += 0.01;
-      const newX = Math.sin(time) * 500;
-      setViewport(prev => ({
-        ...prev,
-        x: newX
-      }));
-      
-      // Fetch new data based on viewport position
-      const startTime = Math.max(0, time);
-      const endTime = startTime + 10;
-      fetchData(startTime, endTime);
-      
-      animationRef.current = requestAnimationFrame(simulateMovement);
-    };
-    
-    animationRef.current = requestAnimationFrame(simulateMovement);
-    
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [metadata, data]);
+  // useEffect(() => {
+  //   if (!metadata || !data) return;
+  //
+  //   let time = 0;
+  //   const simulateMovement = () => {
+  //     // Simulate panning by updating viewport position
+  //     time += 0.01;
+  //     const newX = Math.sin(time / 1000) * 500;
+  //     setViewport(prev => ({
+  //       ...prev,
+  //       x: newX
+  //     }));
+  //
+  //     // Fetch new data based on viewport position
+  //     const startTime = Math.max(0, time);
+  //     const endTime = startTime + 10;
+  //     fetchData(startTime, endTime);
+  //
+  //     animationRef.current = requestAnimationFrame(simulateMovement);
+  //   };
+  //
+  //   animationRef.current = requestAnimationFrame(simulateMovement);
+  //
+  //   return () => {
+  //     if (animationRef.current) {
+  //       cancelAnimationFrame(animationRef.current);
+  //     }
+  //   };
+  // }, [metadata, data]);
   
   const fetchData = async (startTime, endTime) => {
     if (!metadata || isLoading) return;
@@ -89,7 +89,7 @@ export default function Home() {
         start_time: startTime,
         end_time: endTime,
         channel: 0,
-        data_type: 'voltage'
+        data_type: 'current'
       });
       
       setData(response.data);
@@ -112,9 +112,11 @@ export default function Home() {
             <p>Duration: {metadata.duration_sec} seconds</p>
           </div>
         )}
-        {isLoading && <p>Loading data...</p>}
+        {/*{isLoading && <p>Loading data...</p>}*/}
       </div>
-      <DeckVisualization data={data} viewport={viewport} />
+      <div className={styles.plotlyContainer}>
+        <D3Visualization data={data} viewport={viewport} />
+      </div>
     </div>
   );
 }

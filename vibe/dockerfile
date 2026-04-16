@@ -1,11 +1,14 @@
 FROM ghcr.io/astral-sh/uv:debian-slim
 
-# Install system dependencies for C++ and git
+# Install git and nodejs
 RUN apt-get update && apt-get install -y \
     curl \
     git \
-    build-essential \
-    cmake \
+#     build-essential \
+#     cmake \
+    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash \
+    && \. "$HOME/.nvm/nvm.sh" \
+    && nvm install 24 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN uv python install 3.14 --default

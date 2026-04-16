@@ -4,10 +4,12 @@
   "private": true,
   "dependencies": {
     "axios": "^1.15.0",
-    "deck.gl": "^9.3.0",
+    "d3": "^7.9.0",
     "next": "^16.2.3",
+    "plotly.js": "^2.30.0",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "react-plotly.js": "^2.6.0"
   },
   "scripts": {
     "dev": "next dev",
