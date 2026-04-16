@@ -21,16 +21,27 @@ export default function D3Visualization({ data, viewport }) {
     const height = 500;
     const margin = { top: 30, right: 20, bottom: 50, left: 50 };
     
+    // Calculate chart dimensions
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+    
     // Create main SVG group with margins
     const mainGroup = svg
       .attr("width", width)
       .attr("height", height)
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    // Calculate chart dimensions
-    const chartWidth = width - margin.left - margin.right;
-    const chartHeight = height - margin.top - margin.bottom;
+    
+    // Create a clip path for the zoomable area
+    mainGroup.append("defs").append("clipPath")
+      .attr("id", "clip")
+      .append("rect")
+      .attr("width", chartWidth)
+      .attr("height", chartHeight);
+    
+    // Create a group for the zoomable content (data line only)
+    const zoomGroup = mainGroup.append("g")
+      .attr("clip-path", "url(#clip)");
 
     // Convert time-series data
     const timeValues = data.data.map((value, index) => index / data.sample_rate);
@@ -69,21 +80,23 @@ export default function D3Visualization({ data, viewport }) {
       .y(d => yScale(d))
       .curve(d3.curveLinear);
 
-    // Add X axis
-    mainGroup.append("g")
+    // Add X axis to main group (not zoomable)
+    const xAxisGroup = mainGroup.append("g")
       .attr("transform", `translate(0,${chartHeight})`)
-      .call(d3.axisBottom(xScale))
-      .append("text")
+      .call(d3.axisBottom(xScale));
+    
+    xAxisGroup.append("text")
       .attr("x", chartWidth / 2)
       .attr("y", 40)
       .attr("fill", "#000")
       .attr("text-anchor", "middle")
       .text("Time (s)");
 
-    // Add Y axis
-    mainGroup.append("g")
-      .call(d3.axisLeft(yScale))
-      .append("text")
+    // Add Y axis to main group (not zoomable)
+    const yAxisGroup = mainGroup.append("g")
+      .call(d3.axisLeft(yScale));
+    
+    yAxisGroup.append("text")
       .attr("transform", "rotate(-90)")
       .attr("y", -40)
       .attr("x", -chartHeight / 2)
@@ -91,7 +104,7 @@ export default function D3Visualization({ data, viewport }) {
       .attr("text-anchor", "middle")
       .text("Current (scaled)");
 
-    // Add title
+    // Add title (not zoomable)
     svg.append("text")
       .attr("x", width / 2)
       .attr("y", 20)
@@ -100,13 +113,31 @@ export default function D3Visualization({ data, viewport }) {
       .style("font-weight", "bold")
       .text("Current Trace");
 
-    // Draw the line
-    mainGroup.append("path")
+    // Draw the line in zoom group
+    const linePath = zoomGroup.append("path")
       .datum(voltageValues)
       .attr("fill", "none")
       .attr("stroke", "#ff0000")
       .attr("stroke-width", 2)
       .attr("d", line);
+    
+    // Add zoom behavior
+    const zoom = d3.zoom()
+      .scaleExtent([0.5, 10]) // Minimum and maximum zoom levels
+      .on("zoom", (event) => {
+        // Apply zoom transform only to the data (zoom group)
+        zoomGroup.attr("transform", event.transform);
+        
+        // Update axes with the new transformed scales
+        const newXScale = event.transform.rescaleX(xScale);
+        const newYScale = event.transform.rescaleY(yScale);
+        
+        xAxisGroup.call(d3.axisBottom(newXScale));
+        yAxisGroup.call(d3.axisLeft(newYScale));
+      });
+    
+    // Apply zoom behavior to the main SVG
+    mainGroup.call(zoom);
 
   }, [data, viewport]);
 
