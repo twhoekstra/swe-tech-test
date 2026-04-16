@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 # Configuration
-DATA_FILE = "/repo/recordings/mock48_2500hz_1.5h.zarr"
+DATA_FILE = "./recordings/mock48_2500hz_1.5h.zarr"
 
 class DataRequest(BaseModel):
     start_time: float  # in seconds
