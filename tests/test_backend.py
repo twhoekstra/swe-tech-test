@@ -6,7 +6,7 @@ import sys
 import os
 from http import HTTPStatus
 
-from src.backend.app.main import app, DataRequest, get_store, time_to_samples
+from backend.app.main import app, DataRequest, get_store, time_to_samples
 from fastapi.testclient import TestClient
 
 

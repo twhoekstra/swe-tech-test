@@ -9,7 +9,7 @@ import subprocess
 import requests
 import signal
 
-from backend.app.main import app, DataRequest, get_zarr_store, time_to_samples
+from backend.app.main import app, DataRequest, get_store, time_to_samples
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
