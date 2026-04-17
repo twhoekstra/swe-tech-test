@@ -1,11 +1,11 @@
 # Real-Time Data Visualization System
 
-A system for visualizing large time-series datasets with pan/zoom capabilities using FastAPI backend and React + Deck.gl frontend.
+Prototype for visualizing large time-series datasets with pan/zoom capabilities using FastAPI backend and React + D3.js frontend.
 
 ## System Overview
 
 - **Backend**: FastAPI server serving downsampled data chunks from Zarr files
-- **Frontend**: Next.js application with Deck.gl for interactive visualization
+- **Frontend**: Next.js application with D3.js for interactive visualization
 - **Data**: 48-channel time-series data at 2.5kHz sampling rate (~657MB)
 
 ## Directory Structure
@@ -13,17 +13,15 @@ A system for visualizing large time-series datasets with pan/zoom capabilities u
 ```
 src/
 ├── backend/               # FastAPI server
-│   ├── app/               # API routes and data processing
-│   └── requirements.txt   # Python dependencies
-│
+│   └── app/               # API routes and data processing
+│  
 ├── frontend/              # React + Deck.gl client
 │   ├── public/            # Static files
 │   ├── src/               # React components
 │   └── package.json       # Node dependencies
 │
 └── tests/                 # Pytest tests
-    ├── test_backend.py     # Backend unit tests
-    └── test_integration.py  # Integration tests
+    └── test_backend.py     # Backend unit tests
 ```
 
 ## Setup Instructions
@@ -41,16 +39,13 @@ src/
 uv venv
 source .venv/bin/activate
 uv sync
-soruce 
 ```
 
 2. **Start the FastAPI server:**
 
 ```bash
-cd 
-uvicorn src/backend/app.main:app --host 0.0.0.0 --port 8000
+serve
 ```
-
 The server will be available at `http://localhost:8000`
 
 ### Frontend Setup
@@ -70,147 +65,55 @@ npm run dev
 
 The frontend will be available at `http://localhost:3000`
 
-## API Endpoints
-
-### GET `/metadata`
-
-Returns metadata about the recording:
-
-```json
-{
-  "device_id": "mock-48ch-001",
-  "number_of_channels": 48,
-  "sample_rate_hz": 2500.0,
-  "duration_sec": 5400.0,
-  "current_units": "pA",
-  "current_range": 2.0,
-  "current_scale": 0.06103515625,
-  "current_offset": 0,
-  "voltage_scale": 0.0625,
-  "voltage_offset": 0
-}
-```
-
-### POST `/data`
-
-Fetch time-series data for a specific range:
-
-**Request:**
-```json
-{
-  "start_time": 0.0,
-  "end_time": 1.0,
-  "channel": 0,
-  "data_type": "voltage"
-}
-```
-
-**Response:**
-```json
-{
-  "channel": 0,
-  "start_time": 0.0,
-  "end_time": 1.0,
-  "sample_rate": 2500.0,
-  "data": [0.123, 0.456, ...],
-  "data_type": "voltage",
-  "unit": "mV"
-}
-```
-
 ## Running Tests
 
 ### Backend Tests
 
 ```bash
-cd /repo
-python -m pytest tests/test_backend.py -v
+pytest
 ```
 
-### Integration Tests
+## Features
 
-```bash
-cd /repo
-python -m pytest tests/test_integration.py -v
-```
 
-### Run All Tests
+### Backend
+- **Data serving API**: FastAPI for selecting file and retrieving data + metadata
 
-```bash
-cd /repo
-python -m pytest tests/ -v
-```
+Not implemented yet:
+- **Downscaling**: No pre-calculation of downscaled versions of data
+- **Optimization**: No optimization of voltage data (identical per channel, stored in multiple.)
 
-## Data Format
 
-The system uses Zarr format for efficient storage and access of large time-series data:
-
-- **File**: `recordings/mock48_2500hz_1.5h.zarr`
-- **Size**: ~657MB
-- **Structure**: 48 channels × 13.5M samples each
-- **Sampling Rate**: 2.5kHz
-- **Duration**: 1.5 hours
-
-## Frontend Features
+### Frontend
 
 - **Next.js App Router**: Modern Next.js structure with app router
-- **Client Components**: Interactive components with "use client" directive
-- **CSS Modules**: Scoped styling with CSS modules
-- **Interactive Visualization**: Deck.gl LineLayer for rendering traces
-- **Real-time Updates**: requestAnimationFrame for smooth pan/zoom simulation
+- **Interactive Visualization**: D3.js for rendering traces
 - **Data Fetching**: Axios for API communication
+
+Not implemented yet:
 - **Viewport Management**: Simulated pan/zoom with continuous data fetching
 
 ## Development Notes
 
-### Backend Performance
+### Backend
 
-- Uses Zarr for efficient chunked reading of large datasets
-- Converts raw ADC counts to physical units (mV/pA)
-- Validates all input parameters
-- Returns appropriate HTTP status codes
+- ADC counts are served when data is requested. Metadata contains scaling to conver to physical units (mV/pA) on client side
 
-### Frontend Implementation
+### Frontend
 
-- **Dynamic Components**: Deck.gl components use `dynamic(() => import(), { ssr: false })` to avoid server-side rendering issues
-- **Correct Imports**: Use `DeckGL` from `@deck.gl/react` (not `Deck`)
-- **Client Components**: All interactive components use "use client" directive
-- **CSS Modules**: Scoped styling with CSS modules for better maintainability
-- **App Router**: Uses Next.js 13+ app router structure for improved performance
-
-### Frontend Performance
-
-- **Next.js Optimization**: Automatic code splitting and optimized builds
-- **Dynamic Imports**: Deck.gl components loaded dynamically to avoid SSR issues
-- **Deck.gl**: GPU-accelerated rendering for large datasets
-- **Chunked Data Fetching**: Data fetched in chunks based on viewport position
-- **Smooth Animation**: requestAnimationFrame ensures 60fps updates
-- **Loading States**: User feedback during data loading
-
-## Troubleshooting
-
-### Backend Issues
-
-- **Module not found**: Run `pip install -r requirements.txt`
-- **Data file not found**: Ensure `recordings/mock48_2500hz_1.5h.zarr` exists
-- **Port conflict**: Change the port in the uvicorn command
-
-### Frontend Issues
-
-- **Dependency errors**: Run `npm install`
-- **CORS issues**: Backend has CORS enabled for all origins
-- **Connection refused**: Ensure backend is running on port 8000
-- **Build errors with Deck.gl**: Ensure dynamic imports are used: `dynamic(() => import('./components/DeckComponent'), { ssr: false })` and use correct import `DeckGL` from `@deck.gl/react`
+- **Dynamic Components**: D3.js component is dynamic to avoid server-side pre-rendering issues
 
 ## Future Improvements
 
 - Add downsampling for overview visualization
+- Dynamic data fetching when panning/zooming
 - Implement caching for frequently accessed data ranges
 - Add multi-channel display
-- Implement proper authentication
 - Add data export functionality
 - Improve error handling and user feedback
 
 ## License
 
-This project is for demonstration purposes only. The data is randomly generated mock data simulating real electrophysiology recordings.
+**MIT License** - This project is for prototyping/demonstration purposes only.
+
+Copyright (c) 2026 - All rights reserved.
