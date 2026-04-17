@@ -140,29 +140,22 @@ async def get_data(request: DataRequest):
     start_sample, end_sample = time_to_samples(request.start_time, request.end_time, sample_rate)
 
     # Read data
-
-
-
-    if request.data_type == "voltage":
-        data_range = 1 / store.attrs["voltage_scale"]# Voltage doesn't have a range in the data file for some reason
-    elif request.data_type == "current":
-        data_range = store.attrs["current_range"]
-    else:
+    if request.data_type not in ["voltage", "current"]:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="data_type must be 'voltage' or 'current'")
 
     data = store[f"{request.data_type}_data"][request.channel, start_sample:end_sample]
-    data_offset = store.attrs[f"{request.data_type}_offset"]
-
+    scale = store.attrs[f"{request.data_type}_scale"]
+    offset = store.attrs[f"{request.data_type}_offset"]
 
     return {
         "channel": request.channel,
         "start_time": request.start_time,
         "end_time": request.end_time,
         "sample_rate": sample_rate,
-        "data": data,
+        "data": data.tolist(),
         "data_type": request.data_type,
-        "data_range": data_range,
-        "data_offset": data_offset,
+        "scale": scale,
+        "offset": offset,
         "unit": "mV" if request.data_type == "voltage" else "pA"
     }
 

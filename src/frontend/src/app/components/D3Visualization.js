@@ -32,9 +32,11 @@ export default function D3Visualization({ data, viewport, clipEnabled }) {
     const chartWidth = width - marginLeft - marginRight;
     const chartHeight = height - marginTop - marginBottom;
 
+
+    console.log(data)
     const data_table = data.data.map((y, i) => ({
       x: i,
-      y: y,
+      y: y * data.scale + data.offset, // Apply scaling to convert to true values
     }));
 
     // Create the horizontal and vertical scales.
@@ -46,7 +48,7 @@ export default function D3Visualization({ data, viewport, clipEnabled }) {
 
     const y = d3
       .scaleLinear()
-      .domain(d3.extent(data_table, (d) => d.y))
+      .domain(d3.extent(data_table, (d) => d.y)) // Use scaled y values
       .range([height - marginBottom, marginTop])
       .nice();
 
@@ -83,8 +85,6 @@ export default function D3Visualization({ data, viewport, clipEnabled }) {
         .text("Current (scaled)");
 
     // Create line generator, will change later
-    console.log(data_table);
-
     const line = (data_table, x, y) => d3.line()
       .curve(d3.curveLinear)
       .x((d) => x(d.x))
