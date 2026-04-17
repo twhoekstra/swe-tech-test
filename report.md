@@ -47,3 +47,10 @@ Focusing on first challenge
 Google, 
 
 Dont like plotly locked down selection
+
+Plotly dash state management wack
+
+Server side vs client side rendering?
+Hybrid approach: only load in Deck.gl on client side
+
+So many frameworks for this
