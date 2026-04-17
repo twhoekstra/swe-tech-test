@@ -66,7 +66,7 @@ export default function D3Visualization({ data, viewport, clipEnabled }) {
         .attr("y", 40)
         .attr("fill", "#000")
         .attr("text-anchor", "middle")
-        .text("Time (s)");
+        .text("Samples (1)");
 
     // Generator for Y axis
     const yAxis = (g, y) =>
